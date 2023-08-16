@@ -32,7 +32,7 @@ def make_symlink(source: Path, destination: Path, force: bool):
             print(f"Destination '{destination}' already exists.")
             return -2
         delete_symlink(destination)
-    source = source.absolute()
+    source = source.resolve()
     print(f"Symlinking {source} to {destination}...")
     try:
         destination.symlink_to(source)
@@ -49,7 +49,7 @@ def generate_mapping(source: Path, destination: Path):
         mapping = load(mapping_file.open())
     else:
         mapping = {}
-    mapping[str(source)] = str(destination)
+    mapping[str(source.resolve())] = str(destination.resolve())
     with mapping_file.open("w") as f:
         dump(mapping, f)
     return 0
@@ -97,7 +97,7 @@ def main():
     parser.add_argument(
         "--generate-mapping",
         "-g",
-        help="Generate mapping file for use with implink-restore",
+        help="Generate mapping file for use with implink --restore-mapping",
         action="store_true",
         default=False
     )
