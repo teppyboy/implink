@@ -46,8 +46,11 @@ def make_symlink(source: Path, destination: Path, force: bool):
     try:
         destination.symlink_to(source)
     except FileExistsError:
-        print(f"Destination '{destination}' already exists.")
-        return -3
+        if not force:
+            print(f"Destination '{destination}' already exists.")
+            return -3
+        delete_symlink(destination)
+        destination.symlink_to(source)
     return 0
 
 
