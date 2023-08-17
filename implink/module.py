@@ -17,7 +17,7 @@ def move_path(source: Path, destination: Path, force: bool):
     if destination.exists():
         if not force:
             print(f"Destination '{destination}' already exists.")
-            return 1
+            return -2
         rmtree(destination)
     print(f"Moving {source} to {destination}...")
     move(source, destination)
@@ -27,20 +27,28 @@ def move_path(source: Path, destination: Path, force: bool):
 def delete_symlink(destination: Path):
     try:
         rmtree(destination)
+    except PermissionError:
+        print(f"Permission denied for '{destination}'.")
+        return -4
     except OSError:
         # Symlink is a file on Linux?
-        destination.unlink()
+        try:
+            destination.unlink()
+        except IsADirectoryError:
+            destination.rmdir()
+    return 0
 
 
 def make_symlink(source: Path, destination: Path, force: bool):
     if not source.exists():
         print(f"Source '{source}' does not exist.")
-        return -1
+        return -3
     if destination.exists():
         if not force:
             print(f"Destination '{destination}' already exists.")
             return -2
-        delete_symlink(destination)
+        if delete_symlink(destination) != 0:
+            return -1
     source = source.resolve()
     print(f"Symlinking {source} to {destination}...")
     try:
@@ -48,8 +56,9 @@ def make_symlink(source: Path, destination: Path, force: bool):
     except FileExistsError:
         if not force:
             print(f"Destination '{destination}' already exists.")
-            return -3
-        delete_symlink(destination)
+            return -2
+        if delete_symlink(destination) != 0:
+            return -1
         destination.symlink_to(source)
     return 0
 
